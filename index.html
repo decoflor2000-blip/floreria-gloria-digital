@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Un cumpleaños para recordar | Florería Gloria</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Georgia,serif;
+ background:#fff5f5;
+ color:#542b3b;
+ text-align:center;
+}
+.hero{
+ min-height:85vh;
+ padding:65px 20px;
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:center;
+ background:linear-gradient(145deg,#6e263e,#b75c79,#f4c6ce);
+ color:white;
+}
+.rose{font-size:55px;animation:float 3s infinite ease-in-out}
+h1{font-size:clamp(35px,8vw,58px);margin:18px 0}
+.subtitle{font-size:19px}
+.section{max-width:720px;margin:35px auto;padding:25px}
+h2{color:#923c5b}
+.message{
+ background:white;padding:28px;border-radius:20px;
+ box-shadow:0 5px 25px #8b526022;line-height:1.8;
+}
+.gallery{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.photo{
+ min-height:150px;border:2px dashed #d69aab;
+ border-radius:15px;background:#fff;
+ display:flex;align-items:center;justify-content:center;
+ padding:15px;color:#a35b74;
+}
+.media{
+ background:white;border-radius:16px;padding:25px;
+ margin:15px 0;box-shadow:0 5px 20px #8b526022;
+}
+button{
+ border:0;border-radius:30px;padding:14px 23px;
+ margin:8px;background:#923c5b;color:white;
+ font-size:15px;cursor:pointer;
+}
+button:hover{opacity:.85}
+.share{background:#247b56}
+footer{padding:35px;background:#542b3b;color:white}
+footer strong{color:#f5c9a2}
+@keyframes float{
+ 50%{transform:translateY(-12px) rotate(5deg)}
+}
+.confetti{
+ position:fixed;top:-20px;pointer-events:none;
+ animation:fall 4s linear forwards;z-index:10;
+}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+ <div class="rose">🌹</div>
+ <p>UN DÍA MUY ESPECIAL</p>
+ <h1>¡Feliz cumpleaños, Andrea!</h1>
+ <p class="subtitle">Hoy celebramos lo maravilloso que es tenerte en nuestras vidas.</p>
+ <button onclick="celebrar()">Abrir mi sorpresa ✨</button>
+</header>
+
+<section class="section">
+ <h2>Un mensaje para ti ❤️</h2>
+ <div class="message">
+  Que este nuevo año de vida te regale motivos para sonreír,
+  sueños por cumplir y momentos que quieras guardar para siempre.
+  <br><br>
+  ¡Nunca olvides lo especial que eres!
+ </div>
+</section>
+
+<section class="section">
+ <h2>Nuestros recuerdos 📸</h2>
+ <div class="gallery">
+  <div class="photo">Fotografía 1</div>
+  <div class="photo">Fotografía 2</div>
+  <div class="photo">Fotografía 3</div>
+  <div class="photo">Fotografía 4</div>
+ </div>
+</section>
+
+<section class="section">
+ <h2>Un video para ti 🎬</h2>
+ <div class="media">
+  <p>Aquí aparecerá tu video sorpresa.</p>
+  <p>Próximamente: video personalizado</p>
+ </div>
+</section>
+
+<section class="section">
+ <h2>Nuestra canción 🎵</h2>
+ <div class="media">
+  <p>Una canción que nos recuerda a ti.</p>
+  <p>Próximamente: reproductor de música</p>
+ </div>
+</section>
+
+<section class="section">
+ <h2>Comparte esta sorpresa 💌</h2>
+ <p>Los momentos bonitos también merecen compartirse.</p>
+ <button class="share" onclick="compartir()">Compartir tarjeta</button>
+ <button onclick="copiar()">Copiar enlace</button>
+</section>
+
+<footer>
+ <p>Una experiencia creada con cariño por</p>
+ <strong>Florería Gloria 🌹</strong>
+</footer>
+
+<script>
+function celebrar(){
+ for(let i=0;i<35;i++){
+  let e=document.createElement("div");
+  e.className="confetti";
+  e.textContent=["🌸","🌹","✨","💗","🎉"][Math.floor(Math.random()*5)];
+  e.style.left=Math.random()*100+"vw";
+  e.style.animationDelay=Math.random()*2+"s";
+  document.body.appendChild(e);
+  setTimeout(()=>e.remove(),5000);
+ }
+}
+async function compartir(){
+ const data={
+  title:"Un cumpleaños para recordar",
+  text:"Te comparto esta sorpresa de Florería Gloria",
+  url:location.href
+ };
+ if(navigator.share){
+  try{await navigator.share(data)}catch(e){}
+ }else{copiar()}
+}
+async function copiar(){
+ try{
+  await navigator.clipboard.writeText(location.href);
+  alert("¡Enlace copiado!");
+ }catch(e){
+  alert("Copia el enlace desde la barra del navegador.");
+ }
+}
+</script>
+</body>
+</html>
