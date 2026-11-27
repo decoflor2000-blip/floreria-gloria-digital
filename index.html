@@ -625,7 +625,77 @@ async function guardarTarjeta() {
     boton.textContent = "Guardar tarjeta en internet";
   }
 }
+let tarjetasGuardadas = [];
 
+async function mostrarMisTarjetas() {
+  const seccion = $("misTarjetas");
+  seccion.classList.toggle("oculto");
+
+  if (seccion.classList.contains("oculto")) return;
+
+  const lista = $("listaTarjetas");
+  lista.textContent = "Cargando tarjetas...";
+
+  const { data, error } = await clienteSupabase
+    .from("tarjetas")
+    .select("id, destinatario, frase_principal, slug, publicada, created_at")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    lista.textContent = "No se pudieron cargar las tarjetas: " + error.message;
+    return;
+  }
+
+  tarjetasGuardadas = data || [];
+  dibujarTarjetas(tarjetasGuardadas);
+}
+
+function dibujarTarjetas(tarjetas) {
+  const lista = $("listaTarjetas");
+  lista.innerHTML = "";
+
+  if (!tarjetas.length) {
+    lista.textContent = "Todavía no hay tarjetas guardadas.";
+    return;
+  }
+
+  tarjetas.forEach(tarjeta => {
+    const caja = document.createElement("div");
+    caja.style.cssText =
+      "background:#fff5f7;border:1px solid #e5c7d2;border-radius:12px;padding:14px;margin:12px 0";
+
+    const nombre = document.createElement("h3");
+    nombre.textContent = tarjeta.destinatario || "Sin nombre";
+
+    const frase = document.createElement("p");
+    frase.textContent = tarjeta.frase_principal || "";
+
+    const fecha = document.createElement("p");
+    fecha.textContent = tarjeta.created_at
+      ? new Date(tarjeta.created_at).toLocaleString("es-MX")
+      : "Fecha no disponible";
+
+    const estado = document.createElement("p");
+    estado.textContent = tarjeta.publicada ? "Publicada" : "No publicada";
+    estado.style.color = tarjeta.publicada ? "#247342" : "#876879";
+
+    const identificador = document.createElement("p");
+    identificador.textContent = "ID: " + tarjeta.slug;
+
+    caja.append(nombre, frase, fecha, estado, identificador);
+    lista.appendChild(caja);
+  });
+}
+
+$("buscarTarjeta").addEventListener("input", () => {
+  const busqueda = $("buscarTarjeta").value.toLowerCase().trim();
+
+  const resultados = tarjetasGuardadas.filter(t =>
+    (t.destinatario || "").toLowerCase().includes(busqueda)
+  );
+
+  dibujarTarjetas(resultados);
+});
 actualizar();
 iniciarAplicacion();
 </script>
