@@ -3,153 +3,137 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Un cumpleaños para recordar | Florería Gloria</title>
+<title>Editor de tarjetas | Florería Gloria</title>
 <style>
 *{box-sizing:border-box}
-body{
- margin:0;
- font-family:Georgia,serif;
- background:#fff5f5;
- color:#542b3b;
- text-align:center;
-}
-.hero{
- min-height:85vh;
- padding:65px 20px;
- display:flex;
- flex-direction:column;
- align-items:center;
- justify-content:center;
- background:linear-gradient(145deg,#6e263e,#b75c79,#f4c6ce);
- color:white;
-}
-.rose{font-size:55px;animation:float 3s infinite ease-in-out}
-h1{font-size:clamp(35px,8vw,58px);margin:18px 0}
-.subtitle{font-size:19px}
-.section{max-width:720px;margin:35px auto;padding:25px}
-h2{color:#923c5b}
-.message{
- background:white;padding:28px;border-radius:20px;
- box-shadow:0 5px 25px #8b526022;line-height:1.8;
-}
-.gallery{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.photo{
- min-height:150px;border:2px dashed #d69aab;
- border-radius:15px;background:#fff;
- display:flex;align-items:center;justify-content:center;
- padding:15px;color:#a35b74;
-}
-.media{
- background:white;border-radius:16px;padding:25px;
- margin:15px 0;box-shadow:0 5px 20px #8b526022;
-}
-button{
- border:0;border-radius:30px;padding:14px 23px;
- margin:8px;background:#923c5b;color:white;
- font-size:15px;cursor:pointer;
-}
-button:hover{opacity:.85}
-.share{background:#247b56}
-footer{padding:35px;background:#542b3b;color:white}
-footer strong{color:#f5c9a2}
-@keyframes float{
- 50%{transform:translateY(-12px) rotate(5deg)}
-}
-.confetti{
- position:fixed;top:-20px;pointer-events:none;
- animation:fall 4s linear forwards;z-index:10;
-}
-@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+body{margin:0;font-family:Arial,sans-serif;background:#fff5f7;color:#633448}
+header{background:#923c5b;color:white;padding:22px;text-align:center}
+header h1{margin:0;font-family:Georgia,serif}
+main{max-width:1100px;margin:25px auto;padding:15px;display:grid;grid-template-columns:340px 1fr;gap:22px}
+.panel,.preview{background:white;border-radius:16px;padding:22px;box-shadow:0 5px 20px #00000012}
+h2{font-family:Georgia,serif;color:#923c5b}
+label{display:block;font-weight:bold;margin:15px 0 6px}
+input,textarea,select{width:100%;padding:11px;border:1px solid #e5c7d2;border-radius:8px;font:inherit}
+textarea{min-height:85px;resize:vertical}
+input[type=color]{height:45px;padding:4px}
+button{border:0;border-radius:25px;padding:12px 18px;background:#923c5b;color:white;cursor:pointer;margin-top:14px;font-weight:bold}
+button:hover{opacity:.88}
+#tarjeta{min-height:500px;border-radius:14px;padding:55px 25px;text-align:center;color:white;background:linear-gradient(145deg,#6e263e,#b75c79,#f4c6ce);display:flex;flex-direction:column;align-items:center;justify-content:center}
+#tarjeta h1{font: bold clamp(30px,5vw,52px) Georgia,serif;margin:20px 0}
+#tarjeta .sub{font:18px Georgia,serif}
+#tarjeta .dedicatoria{background:white;color:#633448;border-radius:16px;padding:25px;margin-top:35px;max-width:600px;line-height:1.7}
+#tarjeta img{max-width:100%;max-height:300px;object-fit:contain;border-radius:12px;margin-top:18px}
+#tarjeta video{max-width:100%;margin-top:18px;border-radius:12px}
+#tarjeta audio{max-width:100%;margin-top:18px}
+#tarjeta .flor{font-size:45px}
+.nota{font-size:13px;color:#876879;line-height:1.5}
+@media(max-width:750px){main{grid-template-columns:1fr;margin:10px}.preview{padding:12px}#tarjeta{min-height:430px;padding:35px 15px}}
 </style>
 </head>
 <body>
-
-<header class="hero">
- <div class="rose">🌹</div>
- <p>UN DÍA MUY ESPECIAL</p>
- <h1>¡Feliz cumpleaños, Andrea!</h1>
- <p class="subtitle">Hoy celebramos lo maravilloso que es tenerte en nuestras vidas.</p>
- <button onclick="celebrar()">Abrir mi sorpresa ✨</button>
+<header>
+<h1>Florería Gloria</h1>
+<p>Editor de tarjetas digitales</p>
 </header>
 
-<section class="section">
- <h2>Un mensaje para ti ❤️</h2>
- <div class="message">
-  Que este nuevo año de vida te regale motivos para sonreír,
-  sueños por cumplir y momentos que quieras guardar para siempre.
-  <br><br>
-  ¡Nunca olvides lo especial que eres!
- </div>
+<main>
+<section class="panel">
+<h2>Personaliza tu tarjeta</h2>
+
+<label>Nombre del destinatario</label>
+<input id="nombre" value="Andrea" placeholder="Escribe un nombre">
+
+<label>Frase principal</label>
+<input id="frase" value="¡Feliz cumpleaños!" placeholder="Ej. ¡Feliz cumpleaños!">
+
+<label>Mensaje de bienvenida</label>
+<textarea id="saludo">Hoy celebramos lo maravilloso que es tenerte en nuestras vidas.</textarea>
+
+<label>Dedicatoria</label>
+<textarea id="dedicatoria">Que este nuevo año de vida te regale motivos para sonreír, sueños por cumplir y momentos que quieras guardar para siempre.</textarea>
+
+<label>Color principal</label>
+<input type="color" id="color1" value="#6e263e">
+
+<label>Color secundario</label>
+<input type="color" id="color2" value="#f4c6ce">
+
+<label>Fotografías</label>
+<input type="file" id="fotos" accept="image/*" multiple>
+
+<label>Video</label>
+<input type="file" id="video" accept="video/*">
+
+<label>Canción o música</label>
+<input type="file" id="musica" accept="audio/*">
+
+<button onclick="actualizar()">Actualizar tarjeta</button>
+<button onclick="window.print()">Imprimir / Guardar PDF</button>
+<p class="nota">Esta es una versión de prueba. Los archivos seleccionados se muestran en esta vista previa, pero todavía no se guardan en internet ni generan una tarjeta individual.</p>
 </section>
 
-<section class="section">
- <h2>Nuestros recuerdos 📸</h2>
- <div class="gallery">
-  <div class="photo">Fotografía 1</div>
-  <div class="photo">Fotografía 2</div>
-  <div class="photo">Fotografía 3</div>
-  <div class="photo">Fotografía 4</div>
- </div>
+<section class="preview">
+<h2>Vista previa de tu tarjeta</h2>
+<div id="tarjeta">
+<div class="flor">🌹</div>
+<p>UN DÍA MUY ESPECIAL</p>
+<h1 id="vistaFrase">¡Feliz cumpleaños, Andrea!</h1>
+<p class="sub" id="vistaSaludo">Hoy celebramos lo maravilloso que es tenerte en nuestras vidas.</p>
+<div id="vistaFotos"></div>
+<div id="vistaVideo"></div>
+<div id="vistaMusica"></div>
+<div class="dedicatoria" id="vistaDedicatoria">Que este nuevo año de vida te regale motivos para sonreír, sueños por cumplir y momentos que quieras guardar para siempre.</div>
+</div>
 </section>
-
-<section class="section">
- <h2>Un video para ti 🎬</h2>
- <div class="media">
-  <p>Aquí aparecerá tu video sorpresa.</p>
-  <p>Próximamente: video personalizado</p>
- </div>
-</section>
-
-<section class="section">
- <h2>Nuestra canción 🎵</h2>
- <div class="media">
-  <p>Una canción que nos recuerda a ti.</p>
-  <p>Próximamente: reproductor de música</p>
- </div>
-</section>
-
-<section class="section">
- <h2>Comparte esta sorpresa 💌</h2>
- <p>Los momentos bonitos también merecen compartirse.</p>
- <button class="share" onclick="compartir()">Compartir tarjeta</button>
- <button onclick="copiar()">Copiar enlace</button>
-</section>
-
-<footer>
- <p>Una experiencia creada con cariño por</p>
- <strong>Florería Gloria 🌹</strong>
-</footer>
+</main>
 
 <script>
-function celebrar(){
- for(let i=0;i<35;i++){
-  let e=document.createElement("div");
-  e.className="confetti";
-  e.textContent=["🌸","🌹","✨","💗","🎉"][Math.floor(Math.random()*5)];
-  e.style.left=Math.random()*100+"vw";
-  e.style.animationDelay=Math.random()*2+"s";
-  document.body.appendChild(e);
-  setTimeout(()=>e.remove(),5000);
- }
+const $=id=>document.getElementById(id);
+
+function actualizar(){
+const nombre=$("nombre").value.trim()||"";
+$("vistaFrase").textContent=$("frase").value+" "+nombre;
+$("vistaSaludo").textContent=$("saludo").value;
+$("vistaDedicatoria").textContent=$("dedicatoria").value;
+$("tarjeta").style.background=
+`linear-gradient(145deg, ${$("color1").value}, #b75c79, ${$("color2").value})`;
 }
-async function compartir(){
- const data={
-  title:"Un cumpleaños para recordar",
-  text:"Te comparto esta sorpresa de Florería Gloria",
-  url:location.href
- };
- if(navigator.share){
-  try{await navigator.share(data)}catch(e){}
- }else{copiar()}
+
+$("fotos").addEventListener("change",e=>{
+$("vistaFotos").innerHTML="";
+[...e.target.files].forEach(file=>{
+const img=document.createElement("img");
+img.src=URL.createObjectURL(file);
+$("vistaFotos").appendChild(img);
+});
+});
+
+$("video").addEventListener("change",e=>{
+$("vistaVideo").innerHTML="";
+const file=e.target.files[0];
+if(file){
+const video=document.createElement("video");
+video.src=URL.createObjectURL(file);
+video.controls=true;
+$("vistaVideo").appendChild(video);
 }
-async function copiar(){
- try{
-  await navigator.clipboard.writeText(location.href);
-  alert("¡Enlace copiado!");
- }catch(e){
-  alert("Copia el enlace desde la barra del navegador.");
- }
+});
+
+$("musica").addEventListener("change",e=>{
+$("vistaMusica").innerHTML="";
+const file=e.target.files[0];
+if(file){
+const audio=document.createElement("audio");
+audio.src=URL.createObjectURL(file);
+audio.controls=true;
+$("vistaMusica").appendChild(audio);
 }
+});
+
+["nombre","frase","saludo","dedicatoria","color1","color2"].forEach(id=>{
+$(id).addEventListener("input",actualizar);
+});
+actualizar();
 </script>
 </body>
 </html>
