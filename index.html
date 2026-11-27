@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Administrador de tarjetas | Florería Gloria</title>
+<title>Administrador | Florería Gloria</title>
 
 <style>
 *{box-sizing:border-box}
@@ -30,10 +30,11 @@ button:disabled{opacity:.5;cursor:not-allowed}
 #tarjeta .flor{font-size:45px}
 .nota{font-size:13px;color:#876879;line-height:1.5}
 .login{max-width:420px;margin:45px auto}
-.oculto{display:none}
-#estado{margin-top:12px;font-size:14px;line-height:1.5;white-space:pre-wrap}
+.oculto{display:none!important}
+.estado{margin-top:12px;font-size:14px;line-height:1.5;white-space:pre-wrap}
 .exito{color:#247342}
 .error{color:#b42318}
+.enlace{display:inline-block;margin-top:14px;color:#923c5b;cursor:pointer;text-decoration:underline;font-size:14px}
 @media(max-width:750px){
 main{grid-template-columns:1fr;margin:10px}
 .preview{padding:12px}
@@ -49,7 +50,7 @@ main{grid-template-columns:1fr;margin:10px}
 <p>Administrador de tarjetas digitales</p>
 </header>
 
-<section id="login" class="login">
+<section id="login" class="login oculto">
 <h2>Acceso de administrador</h2>
 <p class="nota">Inicia sesión para crear y guardar tarjetas digitales.</p>
 
@@ -60,7 +61,38 @@ main{grid-template-columns:1fr;margin:10px}
 <input id="contrasena" type="password" autocomplete="current-password" placeholder="Tu contraseña">
 
 <button id="btnLogin" onclick="iniciarSesion()">Iniciar sesión</button>
-<div id="estadoLogin"></div>
+
+<div>
+<span class="enlace" onclick="mostrarRecuperacion()">¿Olvidaste tu contraseña?</span>
+</div>
+<div id="estadoLogin" class="estado"></div>
+</section>
+
+<section id="recuperacion" class="login oculto">
+<h2>Recuperar contraseña</h2>
+<p class="nota">Escribe tu correo y te enviaremos un enlace para establecer una contraseña nueva.</p>
+
+<label>Correo electrónico</label>
+<input id="correoRecuperacion" type="email" placeholder="Tu correo">
+
+<button id="btnRecuperacion" onclick="enviarRecuperacion()">Enviar enlace</button>
+<div id="estadoRecuperacion" class="estado"></div>
+
+<span class="enlace" onclick="mostrarLogin()">Volver al inicio de sesión</span>
+</section>
+
+<section id="nuevaContrasena" class="login oculto">
+<h2>Crear nueva contraseña</h2>
+<p class="nota">Escribe y confirma tu nueva contraseña para tu cuenta de administrador.</p>
+
+<label>Nueva contraseña</label>
+<input id="nuevaClave" type="password" autocomplete="new-password" placeholder="Mínimo 8 caracteres">
+
+<label>Confirmar contraseña</label>
+<input id="confirmarClave" type="password" autocomplete="new-password" placeholder="Repite tu contraseña">
+
+<button id="btnCambiarClave" onclick="cambiarContrasena()">Guardar nueva contraseña</button>
+<div id="estadoNuevaClave" class="estado"></div>
 </section>
 
 <main id="editor" class="oculto">
@@ -72,10 +104,10 @@ main{grid-template-columns:1fr;margin:10px}
 </div>
 
 <label>Nombre del destinatario</label>
-<input id="nombre" value="" placeholder="Escribe un nombre">
+<input id="nombre" placeholder="Escribe un nombre">
 
 <label>Frase principal</label>
-<input id="frase" value="¡Feliz cumpleaños!" placeholder="Ej. ¡Feliz cumpleaños!">
+<input id="frase" value="¡Feliz cumpleaños!">
 
 <label>Mensaje de bienvenida</label>
 <textarea id="saludo">Hoy celebramos lo maravilloso que es tenerte en nuestras vidas.</textarea>
@@ -102,17 +134,13 @@ main{grid-template-columns:1fr;margin:10px}
 <button id="btnGuardar" onclick="guardarTarjeta()">Guardar tarjeta en internet</button>
 <button onclick="window.print()">Imprimir / Guardar PDF</button>
 
-<div id="estado"></div>
+<div id="estado" class="estado"></div>
 
-<p class="nota">
-Los archivos se guardarán en el almacenamiento privado de Supabase.
-Las tarjetas nuevas se guardan como no publicadas.
-</p>
+<p class="nota">Los archivos se guardan en el almacenamiento privado de Supabase. Las tarjetas nuevas quedan sin publicar.</p>
 </section>
 
 <section class="preview">
 <h2>Vista previa de tu tarjeta</h2>
-
 <div id="tarjeta">
 <div class="flor">🌹</div>
 <p>UN DÍA MUY ESPECIAL</p>
@@ -137,7 +165,15 @@ const SUPABASE_KEY = "sb_publishable_TRIh4q6_otqZwu0rodAF5g_VQE6qah4";
 
 const clienteSupabase = window.supabase.createClient(
   SUPABASE_URL,
-  SUPABASE_KEY
+  SUPABASE_KEY,
+  {
+    auth: {
+      flowType: "implicit",
+      detectSessionInUrl: true,
+      persistSession: true,
+      autoRefreshToken: true
+    }
+  }
 );
 
 const ADMIN_UID = "25149ed1-a4ce-435d-814f-6082cd3f98c7";
@@ -145,64 +181,117 @@ const BUCKET = "tarjetas";
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 const TIPOS_PERMITIDOS = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-  "video/mp4",
-  "audio/mpeg",
-  "audio/mp4",
-  "audio/ogg",
-  "audio/wav"
+  "image/jpeg","image/png","image/webp","image/gif",
+  "video/mp4","audio/mpeg","audio/mp4","audio/ogg","audio/wav"
 ];
 
+let modoRecuperacion = false;
 let archivosVista = [];
 
-function mostrarEstado(mensaje, tipo = "") {
-  $("estado").textContent = mensaje;
-  $("estado").className = tipo;
+function ocultarPantallas() {
+  ["login","recuperacion","nuevaContrasena","editor"].forEach(id => {
+    $(id).classList.add("oculto");
+  });
 }
 
-function mostrarEstadoLogin(mensaje, tipo = "") {
-  $("estadoLogin").textContent = mensaje;
-  $("estadoLogin").className = tipo;
+function mostrarMensaje(id, mensaje, tipo="") {
+  $(id).textContent = mensaje;
+  $(id).className = "estado " + tipo;
+}
+
+function mostrarLogin() {
+  ocultarPantallas();
+  $("login").classList.remove("oculto");
+}
+
+function mostrarRecuperacion() {
+  ocultarPantallas();
+  $("recuperacion").classList.remove("oculto");
+}
+
+function mostrarNuevaContrasena() {
+  modoRecuperacion = true;
+  ocultarPantallas();
+  $("nuevaContrasena").classList.remove("oculto");
 }
 
 function mostrarEditor(sesion) {
-  const usuario = sesion?.user;
-
-  if (!usuario || usuario.id !== ADMIN_UID) {
-    $("login").classList.remove("oculto");
-    $("editor").classList.add("oculto");
-    return;
+  if (sesion?.user?.id === ADMIN_UID) {
+    ocultarPantallas();
+    $("editor").classList.remove("oculto");
+  } else {
+    mostrarLogin();
   }
-
-  $("login").classList.add("oculto");
-  $("editor").classList.remove("oculto");
 }
 
-async function revisarSesion() {
+function esEnlaceRecuperacion() {
+  const parametros = new URLSearchParams(location.search);
+  const fragmento = new URLSearchParams(location.hash.replace(/^#/, ""));
+
+  return parametros.get("type") === "recovery" ||
+         fragmento.get("type") === "recovery";
+}
+
+async function iniciarAplicacion() {
   const { data, error } = await clienteSupabase.auth.getSession();
 
   if (error) {
-    mostrarEstadoLogin("No se pudo comprobar la sesión.");
+    mostrarLogin();
+    mostrarMensaje("estadoLogin","No se pudo comprobar la sesión: " + error.message,"error");
     return;
   }
 
-  mostrarEditor(data.session);
+  if (esEnlaceRecuperacion()) {
+    if (data.session) {
+      mostrarNuevaContrasena();
+    } else {
+      mostrarLogin();
+      mostrarMensaje("estadoLogin","El enlace de recuperación no pudo validarse. Solicita uno nuevo.","error");
+    }
+    return;
+  }
+
+  if (data.session?.user?.id === ADMIN_UID) {
+    mostrarEditor(data.session);
+  } else {
+    mostrarLogin();
+  }
 }
+
+clienteSupabase.auth.onAuthStateChange((evento, sesion) => {
+  if (evento === "PASSWORD_RECOVERY") {
+    mostrarNuevaContrasena();
+    return;
+  }
+
+  if (modoRecuperacion) return;
+
+  if (evento === "SIGNED_OUT") {
+    mostrarLogin();
+    return;
+  }
+
+  if (evento === "SIGNED_IN" || evento === "INITIAL_SESSION") {
+    if (sesion?.user?.id === ADMIN_UID) {
+      mostrarEditor(sesion);
+    } else if (sesion) {
+      clienteSupabase.auth.signOut();
+      mostrarLogin();
+    }
+  }
+});
 
 async function iniciarSesion() {
   const correo = $("correo").value.trim();
   const contrasena = $("contrasena").value;
 
   if (!correo || !contrasena) {
-    mostrarEstadoLogin("Escribe tu correo y contraseña.", "error");
+    mostrarMensaje("estadoLogin","Escribe tu correo y contraseña.","error");
     return;
   }
 
   $("btnLogin").disabled = true;
-  mostrarEstadoLogin("Iniciando sesión...");
+  mostrarMensaje("estadoLogin","Iniciando sesión...");
 
   const { data, error } = await clienteSupabase.auth.signInWithPassword({
     email: correo,
@@ -212,29 +301,105 @@ async function iniciarSesion() {
   $("btnLogin").disabled = false;
 
   if (error) {
-    mostrarEstadoLogin("No se pudo iniciar sesión: " + error.message, "error");
+    mostrarMensaje("estadoLogin","No se pudo iniciar sesión: " + error.message,"error");
     return;
   }
 
   if (data.user.id !== ADMIN_UID) {
     await clienteSupabase.auth.signOut();
-    mostrarEstadoLogin("Esta cuenta no tiene permiso de administrador.", "error");
+    mostrarMensaje("estadoLogin","Esta cuenta no tiene permiso de administrador.","error");
     return;
   }
 
-  mostrarEstadoLogin("");
   mostrarEditor(data.session);
 }
 
-async function cerrarSesion() {
-  await clienteSupabase.auth.signOut();
-  mostrarEditor(null);
-  mostrarEstadoLogin("Sesión cerrada.");
+async function enviarRecuperacion() {
+  const correo = $("correoRecuperacion").value.trim();
+
+  if (!correo) {
+    mostrarMensaje("estadoRecuperacion","Escribe tu correo electrónico.","error");
+    return;
+  }
+
+  $("btnRecuperacion").disabled = true;
+  mostrarMensaje("estadoRecuperacion","Enviando solicitud...");
+
+  const { error } = await clienteSupabase.auth.resetPasswordForEmail(correo, {
+    redirectTo: SUPABASE_URL
+      ? "https://floreria-gloria-digital.vercel.app"
+      : undefined
+  });
+
+  $("btnRecuperacion").disabled = false;
+
+  if (error) {
+    mostrarMensaje("estadoRecuperacion","No se pudo enviar el correo: " + error.message,"error");
+    return;
+  }
+
+  mostrarMensaje("estadoRecuperacion","Solicitud enviada. Revisa tu correo y abre el enlace más reciente.","exito");
 }
 
-clienteSupabase.auth.onAuthStateChange((_evento, sesion) => {
-  mostrarEditor(sesion);
-});
+async function cambiarContrasena() {
+  const clave = $("nuevaClave").value;
+  const confirmar = $("confirmarClave").value;
+
+  if (clave.length < 8) {
+    mostrarMensaje("estadoNuevaClave","La contraseña debe tener al menos 8 caracteres.","error");
+    return;
+  }
+
+  if (clave !== confirmar) {
+    mostrarMensaje("estadoNuevaClave","Las contraseñas no coinciden.","error");
+    return;
+  }
+
+  $("btnCambiarClave").disabled = true;
+  mostrarMensaje("estadoNuevaClave","Actualizando contraseña...");
+
+  const { data: sesionData, error: sesionError } =
+    await clienteSupabase.auth.getSession();
+
+  if (sesionError || !sesionData.session) {
+    $("btnCambiarClave").disabled = false;
+    mostrarMensaje("estadoNuevaClave","La sesión de recuperación expiró. Solicita un enlace nuevo.","error");
+    return;
+  }
+
+  if (sesionData.session.user.id !== ADMIN_UID) {
+    $("btnCambiarClave").disabled = false;
+    mostrarMensaje("estadoNuevaClave","Esta cuenta no tiene permiso de administrador.","error");
+    return;
+  }
+
+  const { error } = await clienteSupabase.auth.updateUser({
+    password: clave
+  });
+
+  $("btnCambiarClave").disabled = false;
+
+  if (error) {
+    mostrarMensaje("estadoNuevaClave","No se pudo cambiar la contraseña: " + error.message,"error");
+    return;
+  }
+
+  modoRecuperacion = false;
+  $("nuevaClave").value = "";
+  $("confirmarClave").value = "";
+
+  mostrarMensaje("estadoNuevaClave","¡Contraseña actualizada! Ya puedes entrar al administrador.","exito");
+
+  setTimeout(() => {
+    mostrarEditor(sesionData.session);
+  }, 1800);
+}
+
+async function cerrarSesion() {
+  modoRecuperacion = false;
+  await clienteSupabase.auth.signOut();
+  mostrarLogin();
+}
 
 function actualizar() {
   const nombre = $("nombre").value.trim();
@@ -330,15 +495,15 @@ async function subirArchivo(file, ruta) {
 }
 
 async function guardarTarjeta() {
-  mostrarEstado("");
+  mostrarMensaje("estado","");
 
   const { data: sesionData, error: sesionError } =
     await clienteSupabase.auth.getSession();
 
   if (sesionError || !sesionData.session ||
       sesionData.session.user.id !== ADMIN_UID) {
-    mostrarEstado("Tu sesión no está autorizada. Inicia sesión nuevamente.", "error");
-    mostrarEditor(null);
+    mostrarMensaje("estado","Tu sesión no está autorizada. Inicia sesión nuevamente.","error");
+    mostrarLogin();
     return;
   }
 
@@ -346,19 +511,18 @@ async function guardarTarjeta() {
   const video = $("video").files[0];
   const musica = $("musica").files[0];
 
-  const archivos = [...fotos, ...(video ? [video] : []), ...(musica ? [musica] : [])];
-
   try {
-    archivos.forEach(validarArchivo);
+    [...fotos, ...(video ? [video] : []), ...(musica ? [musica] : [])]
+      .forEach(validarArchivo);
   } catch (error) {
-    mostrarEstado(error.message, "error");
+    mostrarMensaje("estado",error.message,"error");
     return;
   }
 
   const nombre = $("nombre").value.trim();
 
   if (!nombre) {
-    mostrarEstado("Escribe el nombre del destinatario.", "error");
+    mostrarMensaje("estado","Escribe el nombre del destinatario.","error");
     return;
   }
 
@@ -380,6 +544,7 @@ async function guardarTarjeta() {
     }
 
     let videoPath = null;
+
     if (video) {
       videoPath = `${slug}/video.${extensionArchivo(video)}`;
       await subirArchivo(video, videoPath);
@@ -387,6 +552,7 @@ async function guardarTarjeta() {
     }
 
     let cancionPath = null;
+
     if (musica) {
       cancionPath = `${slug}/musica.${extensionArchivo(musica)}`;
       await subirArchivo(musica, cancionPath);
@@ -417,9 +583,10 @@ async function guardarTarjeta() {
 
     if (error) throw error;
 
-    mostrarEstado(
-      "¡Tarjeta guardada correctamente!\n" +
-      "Identificador: " + data.slug +
+    mostrarMensaje(
+      "estado",
+      "¡Tarjeta guardada correctamente!\nIdentificador: " +
+      data.slug +
       "\nEstado: No publicada todavía.",
       "exito"
     );
@@ -433,6 +600,7 @@ async function guardarTarjeta() {
     $("vistaVideo").innerHTML = "";
     $("vistaMusica").innerHTML = "";
 
+    limpiarVistaArchivos();
     actualizar();
 
   } catch (error) {
@@ -442,7 +610,8 @@ async function guardarTarjeta() {
         .remove(rutasSubidas);
     }
 
-    mostrarEstado(
+    mostrarMensaje(
+      "estado",
       "No se pudo guardar la tarjeta.\n" +
       (error.message || "Error desconocido"),
       "error"
@@ -454,7 +623,7 @@ async function guardarTarjeta() {
 }
 
 actualizar();
-revisarSesion();
+iniciarAplicacion();
 </script>
 
 </body>
