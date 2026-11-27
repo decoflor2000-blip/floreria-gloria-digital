@@ -3,23 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Editor de tarjetas | Florería Gloria</title>
+<title>Administrador de tarjetas | Florería Gloria</title>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#fff5f7;color:#633448}
 header{background:#923c5b;color:white;padding:22px;text-align:center}
 header h1{margin:0;font-family:Georgia,serif}
 main{max-width:1100px;margin:25px auto;padding:15px;display:grid;grid-template-columns:340px 1fr;gap:22px}
-.panel,.preview{background:white;border-radius:16px;padding:22px;box-shadow:0 5px 20px #00000012}
+.panel,.preview,.login{background:white;border-radius:16px;padding:22px;box-shadow:0 5px 20px #00000012}
 h2{font-family:Georgia,serif;color:#923c5b}
 label{display:block;font-weight:bold;margin:15px 0 6px}
-input,textarea,select{width:100%;padding:11px;border:1px solid #e5c7d2;border-radius:8px;font:inherit}
+input,textarea{width:100%;padding:11px;border:1px solid #e5c7d2;border-radius:8px;font:inherit}
 textarea{min-height:85px;resize:vertical}
 input[type=color]{height:45px;padding:4px}
 button{border:0;border-radius:25px;padding:12px 18px;background:#923c5b;color:white;cursor:pointer;margin-top:14px;font-weight:bold}
 button:hover{opacity:.88}
+button:disabled{opacity:.5;cursor:not-allowed}
 #tarjeta{min-height:500px;border-radius:14px;padding:55px 25px;text-align:center;color:white;background:linear-gradient(145deg,#6e263e,#b75c79,#f4c6ce);display:flex;flex-direction:column;align-items:center;justify-content:center}
-#tarjeta h1{font: bold clamp(30px,5vw,52px) Georgia,serif;margin:20px 0}
+#tarjeta h1{font:bold clamp(30px,5vw,52px) Georgia,serif;margin:20px 0}
 #tarjeta .sub{font:18px Georgia,serif}
 #tarjeta .dedicatoria{background:white;color:#633448;border-radius:16px;padding:25px;margin-top:35px;max-width:600px;line-height:1.7}
 #tarjeta img{max-width:100%;max-height:300px;object-fit:contain;border-radius:12px;margin-top:18px}
@@ -27,21 +29,50 @@ button:hover{opacity:.88}
 #tarjeta audio{max-width:100%;margin-top:18px}
 #tarjeta .flor{font-size:45px}
 .nota{font-size:13px;color:#876879;line-height:1.5}
-@media(max-width:750px){main{grid-template-columns:1fr;margin:10px}.preview{padding:12px}#tarjeta{min-height:430px;padding:35px 15px}}
+.login{max-width:420px;margin:45px auto}
+.oculto{display:none}
+#estado{margin-top:12px;font-size:14px;line-height:1.5;white-space:pre-wrap}
+.exito{color:#247342}
+.error{color:#b42318}
+@media(max-width:750px){
+main{grid-template-columns:1fr;margin:10px}
+.preview{padding:12px}
+#tarjeta{min-height:430px;padding:35px 15px}
+}
 </style>
 </head>
+
 <body>
+
 <header>
 <h1>Florería Gloria</h1>
-<p>Editor de tarjetas digitales</p>
+<p>Administrador de tarjetas digitales</p>
 </header>
 
-<main>
+<section id="login" class="login">
+<h2>Acceso de administrador</h2>
+<p class="nota">Inicia sesión para crear y guardar tarjetas digitales.</p>
+
+<label>Correo electrónico</label>
+<input id="correo" type="email" autocomplete="username" placeholder="Tu correo">
+
+<label>Contraseña</label>
+<input id="contrasena" type="password" autocomplete="current-password" placeholder="Tu contraseña">
+
+<button id="btnLogin" onclick="iniciarSesion()">Iniciar sesión</button>
+<div id="estadoLogin"></div>
+</section>
+
+<main id="editor" class="oculto">
+
 <section class="panel">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
 <h2>Personaliza tu tarjeta</h2>
+<button onclick="cerrarSesion()" style="margin:0">Salir</button>
+</div>
 
 <label>Nombre del destinatario</label>
-<input id="nombre" value="Andrea" placeholder="Escribe un nombre">
+<input id="nombre" value="" placeholder="Escribe un nombre">
 
 <label>Frase principal</label>
 <input id="frase" value="¡Feliz cumpleaños!" placeholder="Ej. ¡Feliz cumpleaños!">
@@ -59,25 +90,33 @@ button:hover{opacity:.88}
 <input type="color" id="color2" value="#f4c6ce">
 
 <label>Fotografías</label>
-<input type="file" id="fotos" accept="image/*" multiple>
+<input type="file" id="fotos" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
 
 <label>Video</label>
-<input type="file" id="video" accept="video/*">
+<input type="file" id="video" accept="video/mp4">
 
 <label>Canción o música</label>
-<input type="file" id="musica" accept="audio/*">
+<input type="file" id="musica" accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav">
 
-<button onclick="actualizar()">Actualizar tarjeta</button>
+<button onclick="actualizar()">Actualizar vista previa</button>
+<button id="btnGuardar" onclick="guardarTarjeta()">Guardar tarjeta en internet</button>
 <button onclick="window.print()">Imprimir / Guardar PDF</button>
-<p class="nota">Esta es una versión de prueba. Los archivos seleccionados se muestran en esta vista previa, pero todavía no se guardan en internet ni generan una tarjeta individual.</p>
+
+<div id="estado"></div>
+
+<p class="nota">
+Los archivos se guardarán en el almacenamiento privado de Supabase.
+Las tarjetas nuevas se guardan como no publicadas.
+</p>
 </section>
 
 <section class="preview">
 <h2>Vista previa de tu tarjeta</h2>
+
 <div id="tarjeta">
 <div class="flor">🌹</div>
 <p>UN DÍA MUY ESPECIAL</p>
-<h1 id="vistaFrase">¡Feliz cumpleaños, Andrea!</h1>
+<h1 id="vistaFrase">¡Feliz cumpleaños!</h1>
 <p class="sub" id="vistaSaludo">Hoy celebramos lo maravilloso que es tenerte en nuestras vidas.</p>
 <div id="vistaFotos"></div>
 <div id="vistaVideo"></div>
@@ -85,57 +124,338 @@ button:hover{opacity:.88}
 <div class="dedicatoria" id="vistaDedicatoria">Que este nuevo año de vida te regale motivos para sonreír, sueños por cumplir y momentos que quieras guardar para siempre.</div>
 </div>
 </section>
+
 </main>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-const $=id=>document.getElementById(id);
+const $ = id => document.getElementById(id);
+
 const SUPABASE_URL = "https://gzyeehftiweexlozjyuy.supabase.co";
 const SUPABASE_KEY = "sb_publishable_TRIh4q6_otqZwu0rodAF5g_VQE6qah4";
-const clienteSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-function actualizar(){
-const nombre=$("nombre").value.trim()||"";
-$("vistaFrase").textContent=$("frase").value+" "+nombre;
-$("vistaSaludo").textContent=$("saludo").value;
-$("vistaDedicatoria").textContent=$("dedicatoria").value;
-$("tarjeta").style.background=
-`linear-gradient(145deg, ${$("color1").value}, #b75c79, ${$("color2").value})`;
+
+const clienteSupabase = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+const ADMIN_UID = "25149ed1-a4ce-435d-814f-6082cd3f98c7";
+const BUCKET = "tarjetas";
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
+const TIPOS_PERMITIDOS = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "video/mp4",
+  "audio/mpeg",
+  "audio/mp4",
+  "audio/ogg",
+  "audio/wav"
+];
+
+let archivosVista = [];
+
+function mostrarEstado(mensaje, tipo = "") {
+  $("estado").textContent = mensaje;
+  $("estado").className = tipo;
 }
 
-$("fotos").addEventListener("change",e=>{
-$("vistaFotos").innerHTML="";
-[...e.target.files].forEach(file=>{
-const img=document.createElement("img");
-img.src=URL.createObjectURL(file);
-$("vistaFotos").appendChild(img);
-});
-});
-
-$("video").addEventListener("change",e=>{
-$("vistaVideo").innerHTML="";
-const file=e.target.files[0];
-if(file){
-const video=document.createElement("video");
-video.src=URL.createObjectURL(file);
-video.controls=true;
-$("vistaVideo").appendChild(video);
+function mostrarEstadoLogin(mensaje, tipo = "") {
+  $("estadoLogin").textContent = mensaje;
+  $("estadoLogin").className = tipo;
 }
-});
 
-$("musica").addEventListener("change",e=>{
-$("vistaMusica").innerHTML="";
-const file=e.target.files[0];
-if(file){
-const audio=document.createElement("audio");
-audio.src=URL.createObjectURL(file);
-audio.controls=true;
-$("vistaMusica").appendChild(audio);
+function mostrarEditor(sesion) {
+  const usuario = sesion?.user;
+
+  if (!usuario || usuario.id !== ADMIN_UID) {
+    $("login").classList.remove("oculto");
+    $("editor").classList.add("oculto");
+    return;
+  }
+
+  $("login").classList.add("oculto");
+  $("editor").classList.remove("oculto");
 }
+
+async function revisarSesion() {
+  const { data, error } = await clienteSupabase.auth.getSession();
+
+  if (error) {
+    mostrarEstadoLogin("No se pudo comprobar la sesión.");
+    return;
+  }
+
+  mostrarEditor(data.session);
+}
+
+async function iniciarSesion() {
+  const correo = $("correo").value.trim();
+  const contrasena = $("contrasena").value;
+
+  if (!correo || !contrasena) {
+    mostrarEstadoLogin("Escribe tu correo y contraseña.", "error");
+    return;
+  }
+
+  $("btnLogin").disabled = true;
+  mostrarEstadoLogin("Iniciando sesión...");
+
+  const { data, error } = await clienteSupabase.auth.signInWithPassword({
+    email: correo,
+    password: contrasena
+  });
+
+  $("btnLogin").disabled = false;
+
+  if (error) {
+    mostrarEstadoLogin("No se pudo iniciar sesión: " + error.message, "error");
+    return;
+  }
+
+  if (data.user.id !== ADMIN_UID) {
+    await clienteSupabase.auth.signOut();
+    mostrarEstadoLogin("Esta cuenta no tiene permiso de administrador.", "error");
+    return;
+  }
+
+  mostrarEstadoLogin("");
+  mostrarEditor(data.session);
+}
+
+async function cerrarSesion() {
+  await clienteSupabase.auth.signOut();
+  mostrarEditor(null);
+  mostrarEstadoLogin("Sesión cerrada.");
+}
+
+clienteSupabase.auth.onAuthStateChange((_evento, sesion) => {
+  mostrarEditor(sesion);
 });
 
-["nombre","frase","saludo","dedicatoria","color1","color2"].forEach(id=>{
-$(id).addEventListener("input",actualizar);
+function actualizar() {
+  const nombre = $("nombre").value.trim();
+
+  $("vistaFrase").textContent =
+    $("frase").value + (nombre ? " " + nombre : "");
+
+  $("vistaSaludo").textContent = $("saludo").value;
+  $("vistaDedicatoria").textContent = $("dedicatoria").value;
+
+  $("tarjeta").style.background =
+    `linear-gradient(145deg, ${$("color1").value}, #b75c79, ${$("color2").value})`;
+}
+
+function limpiarVistaArchivos() {
+  archivosVista.forEach(url => URL.revokeObjectURL(url));
+  archivosVista = [];
+}
+
+$("fotos").addEventListener("change", e => {
+  limpiarVistaArchivos();
+  $("vistaFotos").innerHTML = "";
+
+  [...e.target.files].forEach(file => {
+    const img = document.createElement("img");
+    const url = URL.createObjectURL(file);
+    archivosVista.push(url);
+    img.src = url;
+    $("vistaFotos").appendChild(img);
+  });
 });
+
+$("video").addEventListener("change", e => {
+  $("vistaVideo").innerHTML = "";
+  const file = e.target.files[0];
+
+  if (file) {
+    const video = document.createElement("video");
+    video.src = URL.createObjectURL(file);
+    archivosVista.push(video.src);
+    video.controls = true;
+    $("vistaVideo").appendChild(video);
+  }
+});
+
+$("musica").addEventListener("change", e => {
+  $("vistaMusica").innerHTML = "";
+  const file = e.target.files[0];
+
+  if (file) {
+    const audio = document.createElement("audio");
+    audio.src = URL.createObjectURL(file);
+    archivosVista.push(audio.src);
+    audio.controls = true;
+    $("vistaMusica").appendChild(audio);
+  }
+});
+
+["nombre","frase","saludo","dedicatoria","color1","color2"].forEach(id => {
+  $(id).addEventListener("input", actualizar);
+});
+
+function validarArchivo(file) {
+  if (!TIPOS_PERMITIDOS.includes(file.type)) {
+    throw new Error("Formato no permitido: " + file.name);
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error("El archivo supera los 50 MB: " + file.name);
+  }
+}
+
+function extensionArchivo(file) {
+  const partes = file.name.split(".");
+  return partes.length > 1
+    ? partes.pop().toLowerCase().replace(/[^a-z0-9]/g, "")
+    : "bin";
+}
+
+async function subirArchivo(file, ruta) {
+  validarArchivo(file);
+
+  const { error } = await clienteSupabase.storage
+    .from(BUCKET)
+    .upload(ruta, file, {
+      contentType: file.type,
+      upsert: false
+    });
+
+  if (error) throw error;
+
+  return ruta;
+}
+
+async function guardarTarjeta() {
+  mostrarEstado("");
+
+  const { data: sesionData, error: sesionError } =
+    await clienteSupabase.auth.getSession();
+
+  if (sesionError || !sesionData.session ||
+      sesionData.session.user.id !== ADMIN_UID) {
+    mostrarEstado("Tu sesión no está autorizada. Inicia sesión nuevamente.", "error");
+    mostrarEditor(null);
+    return;
+  }
+
+  const fotos = [...$("fotos").files];
+  const video = $("video").files[0];
+  const musica = $("musica").files[0];
+
+  const archivos = [...fotos, ...(video ? [video] : []), ...(musica ? [musica] : [])];
+
+  try {
+    archivos.forEach(validarArchivo);
+  } catch (error) {
+    mostrarEstado(error.message, "error");
+    return;
+  }
+
+  const nombre = $("nombre").value.trim();
+
+  if (!nombre) {
+    mostrarEstado("Escribe el nombre del destinatario.", "error");
+    return;
+  }
+
+  const boton = $("btnGuardar");
+  boton.disabled = true;
+  boton.textContent = "Guardando tarjeta...";
+
+  const slug = "tarjeta-" + crypto.randomUUID().replaceAll("-", "");
+  const rutasSubidas = [];
+
+  try {
+    const rutasFotos = [];
+
+    for (let i = 0; i < fotos.length; i++) {
+      const ruta = `${slug}/foto-${i + 1}.${extensionArchivo(fotos[i])}`;
+      await subirArchivo(fotos[i], ruta);
+      rutasSubidas.push(ruta);
+      rutasFotos.push(ruta);
+    }
+
+    let videoPath = null;
+    if (video) {
+      videoPath = `${slug}/video.${extensionArchivo(video)}`;
+      await subirArchivo(video, videoPath);
+      rutasSubidas.push(videoPath);
+    }
+
+    let cancionPath = null;
+    if (musica) {
+      cancionPath = `${slug}/musica.${extensionArchivo(musica)}`;
+      await subirArchivo(musica, cancionPath);
+      rutasSubidas.push(cancionPath);
+    }
+
+    const tarjeta = {
+      destinatario: nombre,
+      frase_principal: $("frase").value,
+      mensaje_bienvenida: $("saludo").value,
+      dedicatoria: $("dedicatoria").value,
+      color_principal: $("color1").value,
+      color_secundario: $("color2").value,
+      fotos: rutasFotos,
+      video_path: videoPath,
+      cancion_path: cancionPath,
+      slug: slug,
+      modo_acceso: "compartible",
+      publicada: false,
+      plantilla: "cumpleanos"
+    };
+
+    const { data, error } = await clienteSupabase
+      .from("tarjetas")
+      .insert(tarjeta)
+      .select("id,slug")
+      .single();
+
+    if (error) throw error;
+
+    mostrarEstado(
+      "¡Tarjeta guardada correctamente!\n" +
+      "Identificador: " + data.slug +
+      "\nEstado: No publicada todavía.",
+      "exito"
+    );
+
+    $("nombre").value = "";
+    $("fotos").value = "";
+    $("video").value = "";
+    $("musica").value = "";
+
+    $("vistaFotos").innerHTML = "";
+    $("vistaVideo").innerHTML = "";
+    $("vistaMusica").innerHTML = "";
+
+    actualizar();
+
+  } catch (error) {
+    if (rutasSubidas.length) {
+      await clienteSupabase.storage
+        .from(BUCKET)
+        .remove(rutasSubidas);
+    }
+
+    mostrarEstado(
+      "No se pudo guardar la tarjeta.\n" +
+      (error.message || "Error desconocido"),
+      "error"
+    );
+  } finally {
+    boton.disabled = false;
+    boton.textContent = "Guardar tarjeta en internet";
+  }
+}
+
 actualizar();
+revisarSesion();
 </script>
+
 </body>
 </html>
