@@ -91,7 +91,7 @@ button:hover{opacity:.88}
 const $=id=>document.getElementById(id);
 const SUPABASE_URL = "https://gzyeehftiweexlozjyuy.supabase.co";
 const SUPABASE_KEY = "sb_publishable_TRIh4q6_otqZwu0rodAF5g_VQE6qah4";
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const clienteSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 function actualizar(){
 const nombre=$("nombre").value.trim()||"";
 $("vistaFrase").textContent=$("frase").value+" "+nombre;
