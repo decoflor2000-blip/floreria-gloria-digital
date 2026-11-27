@@ -61,8 +61,12 @@ main{grid-template-columns:1fr;margin:10px}
 <input id="contrasena" type="password" autocomplete="current-password" placeholder="Tu contraseña">
 
 <button id="btnLogin" onclick="iniciarSesion()">Iniciar sesión</button>
-
-<div>
+<button type="button" onclick="mostrarMisTarjetas()">Mis tarjetas guardadas</button>
+<div id="misTarjetas" class="oculto">
+  <h2>Mis tarjetas guardadas</h2>
+  <input id="buscarTarjeta" type="text" placeholder="Buscar por nombre...">
+  <div id="listaTarjetas" class="estado"></div>
+</div>
 <span class="enlace" onclick="mostrarRecuperacion()">¿Olvidaste tu contraseña?</span>
 </div>
 <div id="estadoLogin" class="estado"></div>
